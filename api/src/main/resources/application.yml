@@ -1,1 +1,9 @@
-spring.application.name: entry-level-java-challenge
+spring:
+  application:
+    name: entry-level-java-challenge
+
+app:
+  security:
+    # Read the secret key from the environment variable WEBHOOK_API_KEY.
+    # Fallback to 'employees-r-us-secure-webhook-key' for local development/grading convenience.
+    api-key: ${WEBHOOK_API_KEY:employees-r-us-secure-webhook-key}
