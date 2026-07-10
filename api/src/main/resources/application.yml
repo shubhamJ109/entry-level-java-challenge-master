@@ -1,9 +1,12 @@
 spring:
   application:
     name: entry-level-java-challenge
+  profiles:
+    # Default to the 'local' profile which loads application-local.yml
+    active: local
 
 app:
   security:
-    # Read the secret key from the environment variable WEBHOOK_API_KEY.
-    # Fallback to 'employees-r-us-secure-webhook-key' for local development/grading convenience.
-    api-key: ${WEBHOOK_API_KEY:employees-r-us-secure-webhook-key}
+    # In production, this must be supplied via the environment variable.
+    # In local development, it is loaded securely from the gitignored application-local.yml.
+    api-key: ${WEBHOOK_API_KEY}
