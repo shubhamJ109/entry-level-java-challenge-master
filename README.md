@@ -12,14 +12,13 @@ The application has been restructured using a clean, layered Spring Boot archite
 3. **Data Model (`EmployeeImpl`, `CreateEmployeeRequest`)**: Concrete implementation of the `Employee` interface using Lombok for clean, boiler-free code.
 4. **Security Layer (`ApiKeyInterceptor`, `WebMvcConfigurerImpl`)**: Protects the endpoints against unauthorized public access.
 
----
-
 ## 2. Webhook Security (API Key Header)
 
 To satisfy the requirement of a **protected, secure REST API** for webhooks, we implemented an API Key verification interceptor. All endpoints require the client to supply the secret API key in the `X-API-KEY` request header.
 
 * **Secret Header Name:** `X-API-KEY`
-* **Secret Header Value:** `employees-r-us-secure-webhook-key`
+* **Local Development Key:** `employees-r-us-secure-webhook-key` (loaded securely from local, gitignored `application-local.yml`)
+* **Production Key:** Loaded dynamically via the system environment variable `WEBHOOK_API_KEY` (configured in `application.yml` with no fallback, meaning no production secrets are committed to the codebase).
 
 ---
 
