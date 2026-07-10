@@ -1,54 +1,77 @@
-# ReliaQuest's Entry-Level Java Challenge
+# Submission & Verification Guide
 
-Please keep the following in mind while working on this challenge:
-* Code implementations will not be graded for **correctness** but rather on practicality
-* Articulate clear and concise design methodologies, if necessary
-* Use clean coding etiquette
-  * E.g. avoid liberal use of new-lines, odd variable and method names, random indentation, etc...
-* Test cases are not required
+This document outlines the architecture, security configuration, and steps to run/verify the completed REST API endpoints.
 
-## Problem Statement
+---
 
-Your employer has recently purchased a license to top-tier SaaS platform, Employees-R-US, to off-load all employee management responsibilities.
-Unfortunately, your company's product has an existing employee management solution that is tightly coupled to other services and therefore 
-cannot be replaced whole-cloth. Product and Development leads in your department have decided it would be best to interface
-the existing employee management solution with the commercial offering from Employees-R-US for the time being until all employees can be
-migrated to the new SaaS platform.
+## 1. Project Architecture
 
-Your ask is to expose employee information as a protected, secure REST API for consumption by Employees-R-US web hooks.
-The initial REST API will consist of 3 endpoints, listed in the following section. If for any reason the implementation 
-of an endpoint is problematic, the team lead will accept **pseudo-code** and a pertinent description (e.g. java-doc) of intent.
+The application has been restructured using a clean, layered Spring Boot architecture:
+1. **Controller Layer (`EmployeeController`)**: Exposes REST endpoints, validates payloads, maps responses, and manages status codes (e.g., `201 Created` for POST).
+2. **Service Layer (`EmployeeService`, `EmployeeServiceImpl`)**: Handles all data operations. Includes thread-safe in-memory storage (`ConcurrentHashMap`) pre-seeded with mock employees.
+3. **Data Model (`EmployeeImpl`, `CreateEmployeeRequest`)**: Concrete implementation of the `Employee` interface using Lombok for clean, boiler-free code.
+4. **Security Layer (`ApiKeyInterceptor`, `WebMvcConfigurerImpl`)**: Protects the endpoints against unauthorized public access.
 
-Good luck!
+---
 
-## Endpoints to implement (API module)
+## 2. Webhook Security (API Key Header)
 
-_See `com.challenge.api.controller.EmployeeController` for details._
+To satisfy the requirement of a **protected, secure REST API** for webhooks, we implemented an API Key verification interceptor. All endpoints require the client to supply the secret API key in the `X-API-KEY` request header.
 
-getAllEmployees()
+* **Secret Header Name:** `X-API-KEY`
+* **Secret Header Value:** `employees-r-us-secure-webhook-key`
 
-    output - list of employees
-    description - this should return all employees, unfiltered
+---
 
-getEmployeeByUuid(...)
+## 3. How to Run the Application
 
-    path variable - employee UUID
-    output - employee
-    description - this should return a single employee based on the provided employee UUID
+In your terminal, navigate to the project directory and start the server:
+```bash
+./gradlew bootRun
+```
+Wait until you see `Started EntryLevelJavaChallengeApplication` in the logs. The server will run on `http://localhost:8080`.
 
-createEmployee(...)
+---
 
-    request body - attributes necessary to create an employee
-    output - employee
-    description - this should return a single employee, if created, otherwise error
+## 4. How to Verify Endpoints
 
-## Code Formatting
+### Option A: Using curl commands (Terminal)
 
-This project utilizes Gradle plugin [Diffplug Spotless](https://github.com/diffplug/spotless/tree/main/plugin-gradle) to enforce format
-and style guidelines with every build.
+* **Verify security rejects unauthorized requests (without header):**
+  ```bash
+  curl http://localhost:8080/api/v1/employee
+  ```
+  *Expected result: `401 Unauthorized` with an error message.*
 
-To format code according to style guidelines, you can run **spotlessApply** task.
-`./gradlew spotlessApply`
+* **GET All Employees (with key):**
+  ```bash
+  curl -H "X-API-KEY: employees-r-us-secure-webhook-key" http://localhost:8080/api/v1/employee
+  ```
+  *Expected result: `200 OK` returning the list of mock employees.*
 
-The spotless plugin will also execute check-and-validation tasks as part of the gradle **build** task.
-`./gradlew build`
+* **POST Create a New Employee (with key):**
+  ```bash
+  curl -X POST -H "X-API-KEY: employees-r-us-secure-webhook-key" -H "Content-Type: application/json" -d "{\"firstName\":\"Shubh\",\"lastName\":\"Kumar\",\"salary\":90000,\"age\":25,\"jobTitle\":\"Developer\",\"email\":\"shubh@company.com\"}" http://localhost:8080/api/v1/employee
+  ```
+  *Expected result: `201 Created` returning the newly created employee with their random UUID.*
+
+* **GET Single Employee by UUID (with key):**
+  *(Copy the UUID from the GET or POST responses and replace `YOUR_UUID_HERE`)*
+  ```bash
+  curl -H "X-API-KEY: employees-r-us-secure-webhook-key" http://localhost:8080/api/v1/employee/YOUR_UUID_HERE
+  ```
+
+---
+
+### Option B: Using Browser Developer Console
+
+Since standard web browsers don't allow setting custom headers inside the URL address bar, you can test the API by opening the browser developer tools (**F12 -> Console**) on any page (e.g., `http://localhost:8080`) and executing this script:
+
+```javascript
+fetch('http://localhost:8080/api/v1/employee', {
+    headers: { 'X-API-KEY': 'employees-r-us-secure-webhook-key' }
+})
+.then(res => res.json())
+.then(data => console.log(data));
+```
+This will print the list of employees directly in your browser console!
