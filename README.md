@@ -12,12 +12,14 @@ The application has been restructured using a clean, layered Spring Boot archite
 3. **Data Model (`EmployeeImpl`, `CreateEmployeeRequest`)**: Concrete implementation of the `Employee` interface using Lombok for clean, boiler-free code.
 4. **Security Layer (`ApiKeyInterceptor`, `WebMvcConfigurerImpl`)**: Protects the endpoints against unauthorized public access.
 
+---
+
 ## 2. Webhook Security (API Key Header)
 
 To satisfy the requirement of a **protected, secure REST API** for webhooks, we implemented an API Key verification interceptor. All endpoints require the client to supply the secret API key in the `X-API-KEY` request header.
 
 * **Secret Header Name:** `X-API-KEY`
-* **Local Development Key:** `employees-r-us-secure-webhook-key` (loaded securely from local, gitignored `application-local.yml`)
+* **Local Development Key:** Set your secret key inside the local, gitignored `api/src/main/resources/application-local.yml` file. (Refer to `application-local.yml` on your disk).
 * **Production Key:** Loaded dynamically via the system environment variable `WEBHOOK_API_KEY` (configured in `application.yml` with no fallback, meaning no production secrets are committed to the codebase).
 
 ---
@@ -34,6 +36,8 @@ Wait until you see `Started EntryLevelJavaChallengeApplication` in the logs. The
 
 ## 4. How to Verify Endpoints
 
+> **Note:** Replace `YOUR_API_KEY` in the commands below with the secret key value configured in your local `application-local.yml` or `WEBHOOK_API_KEY` environment variable.
+
 ### Option A: Using curl commands (Terminal)
 
 * **Verify security rejects unauthorized requests (without header):**
@@ -44,20 +48,20 @@ Wait until you see `Started EntryLevelJavaChallengeApplication` in the logs. The
 
 * **GET All Employees (with key):**
   ```bash
-  curl -H "X-API-KEY: employees-r-us-secure-webhook-key" http://localhost:8080/api/v1/employee
+  curl -H "X-API-KEY: YOUR_API_KEY" http://localhost:8080/api/v1/employee
   ```
   *Expected result: `200 OK` returning the list of mock employees.*
 
 * **POST Create a New Employee (with key):**
   ```bash
-  curl -X POST -H "X-API-KEY: employees-r-us-secure-webhook-key" -H "Content-Type: application/json" -d "{\"firstName\":\"Shubh\",\"lastName\":\"Kumar\",\"salary\":90000,\"age\":25,\"jobTitle\":\"Developer\",\"email\":\"shubh@company.com\"}" http://localhost:8080/api/v1/employee
+  curl -X POST -H "X-API-KEY: YOUR_API_KEY" -H "Content-Type: application/json" -d "{\"firstName\":\"Shubh\",\"lastName\":\"Kumar\",\"salary\":90000,\"age\":25,\"jobTitle\":\"Developer\",\"email\":\"shubh@company.com\"}" http://localhost:8080/api/v1/employee
   ```
   *Expected result: `201 Created` returning the newly created employee with their random UUID.*
 
 * **GET Single Employee by UUID (with key):**
   *(Copy the UUID from the GET or POST responses and replace `YOUR_UUID_HERE`)*
   ```bash
-  curl -H "X-API-KEY: employees-r-us-secure-webhook-key" http://localhost:8080/api/v1/employee/YOUR_UUID_HERE
+  curl -H "X-API-KEY: YOUR_API_KEY" http://localhost:8080/api/v1/employee/YOUR_UUID_HERE
   ```
 
 ---
@@ -68,7 +72,7 @@ Since standard web browsers don't allow setting custom headers inside the URL ad
 
 ```javascript
 fetch('http://localhost:8080/api/v1/employee', {
-    headers: { 'X-API-KEY': 'employees-r-us-secure-webhook-key' }
+    headers: { 'X-API-KEY': 'YOUR_API_KEY' }
 })
 .then(res => res.json())
 .then(data => console.log(data));
